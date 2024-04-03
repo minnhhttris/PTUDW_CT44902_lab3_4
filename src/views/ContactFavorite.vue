@@ -4,31 +4,13 @@
             <InputSearch v-model="searchText" />
         </div>
         <div class="mt-3 col-md-6">
-            <div class="d-flex align-items-center justify-content-between">
-                <h4>
-                    Danh bạ
-                    <i class="fas fa-address-book"></i>
-                </h4>
-                <router-link :to="{ name: 'contact.favorite' }">
-                    Yêu thích
-                    <i class="fas fa-heart"></i>
-                </router-link>
-            </div>
-            <ContactList v-if="filteredContactsCount > 0" :contacts="filteredContacts"
+            <h4>
+                Danh bạ yêu thích
+                <i class="fas fa-address-book"></i>
+            </h4>
+            <ContactList v-if="filteredFavoriteContactsCount > 0" :contacts="filteredFavoriteContacts"
                 v-model:activeIndex="activeIndex" />
             <p v-else>Không có liên hệ nào.</p>
-
-            <div class="mt-3 row justify-content-around align-items-center">
-                <button class="btn btn-sm btn-primary" @click="refreshList()">
-                    <i class="fas fa-redo"></i> Làm mới
-                </button>
-                <button class="btn btn-sm btn-success" @click="goToAddContact">
-                    <i class="fas fa-plus"></i> Thêm mới
-                </button>
-                <button class="btn btn-sm btn-danger" @click="removeAllContacts">
-                    <i class="fas fa-trash"></i> Xóa tất cả
-                </button>
-            </div>
         </div>
 
         <div class="mt-3 col-md-6">
@@ -83,25 +65,25 @@ export default {
                 return [name, email, address, phone].join("");
             });
         },
-        // Trả về các contact cần tìm kiếm.
-        filteredContacts() {
-            if (!this.searchText) return this.contacts;
-            return this.contacts.filter((_contact, index) =>
-                this.contactStrings[index].includes(this.searchText)
-            );
-        },
+        
         activeContact() {
             if (this.activeIndex < 0) return null;
-            return this.filteredContacts[this.activeIndex];
+            return this.filteredFavoriteContacts[this.activeIndex];
         },
-        filteredContactsCount() {
-            return this.filteredContacts.length;
+        filteredFavoriteContacts() {
+            if (!this.searchText) return this.contacts;
+            return this.contacts.filter((_contact, index) =>
+                this.contactStrings[index].includes(this.searchText) && _contact.favorite
+            );
+        },
+        filteredFavoriteContactsCount() {
+            return this.filteredFavoriteContacts.length;
         },
     },
     methods: {
         async retrieveContacts() {
             try {
-                this.contacts = await ContactService.getAll();
+                this.contacts = await ContactService.findFavorite();
             } catch (error) {
                 console.log(error);
             }
@@ -110,22 +92,7 @@ export default {
             this.retrieveContacts();
             this.activeIndex = -1;
         },
-        async removeAllContacts() {
-            if (confirm("Bạn muốn xóa tất cả Liên hệ?")) {
-                try {
-                    await ContactService.deleteAll();
-                    this.refreshList();
-                } catch (error) {
-                    console.log(error);
-                }
-            }
-        },
-        goToAddContact() {
-            this.$router.push({ name: "contact.add" });
-        },
-        goToFavoriteContact() {
-            this.$router.push({ name: "contact.favorite" });
-        },
+        
     },
     mounted() {
         this.refreshList();

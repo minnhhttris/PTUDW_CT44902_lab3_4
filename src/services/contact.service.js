@@ -21,5 +21,10 @@ class ContactService {
     async delete(id) {
         return (await this.api.delete(`/${id}`)).data;
     }
+    async findFavorite() {
+		//return (await this.find({ favorite: true }));
+        const allContacts = await this.getAll(); 
+        return allContacts.filter(contact => contact.favorite);
+	}
 }
 export default new ContactService();
